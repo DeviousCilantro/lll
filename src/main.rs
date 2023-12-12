@@ -82,8 +82,22 @@ fn compute_gs(b: &Vec<Vec<f32>>) -> Vec<Vec<f32>> {
     v
 }
 
+fn bnp(b: &Vec<Vec<f32>>, target: &Vec<f32>, n: usize, v: &Vec<Vec<f32>>) -> Vec<f32> {
+    if n == 0 { return target.to_vec(); }
+    let c_i = mu(&target, &v[n - 1]);
+    let new_target: Vec<f32> = subtract(&target, &b[n - 1].iter().map(|x| x * c_i).collect());
+        if n > 1 {
+        return bnp(b, &new_target, n - 1, v);
+    } else {
+        return new_target;
+    }
+}
+
 fn main() {
     let mut basis: Vec<Vec<f32>> = vec![vec![1.0, 2.0, 3.0], vec![-1.0, 0.0, 1.0], vec![0.0, 1.0, 1.0]];
+    let gs = compute_gs(&basis);
     lll(&mut basis, 0.75);
     println!("basis: {:?}", basis);
+    let target: Vec<f32> = vec![2.5, 3.5, 4.5];
+    println!("bnp: {:?}", bnp(&basis, &target, basis.len(), &gs));
 }
