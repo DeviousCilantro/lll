@@ -71,6 +71,30 @@ fn multiply(first: &[Float], second: &[Float]) -> Vec<Float> {
          .collect()
 }
 
+fn dot_product(first: &[Float], second: &[Float]) -> Float {
+    first.iter()
+         .zip(second)
+         .map(|(x, y)| x * y)
+         .fold(Float::with_val(53, 0), |acc, x| acc + x)
+}
+
+fn orthogonality_measure(basis: &[Vec<Float>]) -> Float {
+    let mut sum = Float::with_val(53, 0);
+    let mut count = 0;
+    for i in 0..basis.len() {
+        for j in i+1..basis.len() {
+            sum += dot_product(&basis[i], &basis[j]).abs();
+            count += 1;
+        }
+    }
+    sum / Float::with_val(53, count)
+}
+
+fn average_vector_length(basis: &[Vec<Float>]) -> Float {
+    let sum = basis.iter().map(|vector| norm(vector)).fold(Float::with_val(53, 0), |acc, x| acc + x);
+    sum / Float::with_val(53, basis.len())
+}
+
 fn compute_gs(b: &[Vec<Float>]) -> Vec<Vec<Float>> {
     let mut v = vec![vec![Float::with_val(53, 0); b[0].len()]; b.len()];
     v[0] = b[0].clone();
@@ -175,18 +199,25 @@ fn bkz(basis: &mut Vec<Vec<Float>>, delta: Float, block_size: usize, max_iterati
 
 fn main() {
     let mut basis = vec![
-        vec![Float::with_val(53, 1.0), Float::with_val(53, 2.0), Float::with_val(53, 3.0)],
-        vec![Float::with_val(53, -1.0), Float::with_val(53, 0.0), Float::with_val(53, 1.0)],
-        vec![Float::with_val(53, 0.0), Float::with_val(53, 1.0), Float::with_val(53, 1.0)]
-    ];
+        vec![Float::with_val(53, 11.0), Float::with_val(53, 3.0), Float::with_val(53, 4.0), Float::with_val(53, 4.0)],
+        vec![Float::with_val(53, 2.0), Float::with_val(53, 11.0), Float::with_val(53, 5.0), Float::with_val(53, 6.0)],
+        vec![Float::with_val(53, 7.0), Float::with_val(53, 8.0), Float::with_val(53, 11.0), Float::with_val(53, 9.0)],
+        vec![Float::with_val(53, 10.0), Float::with_val(53, 11.0), Float::with_val(53, 12.0), Float::with_val(53, 9.0)],
+    ];    
     //let gs = compute_gs(&basis);
     let mut basis1 = basis.clone();
+    println!("Original basis: {:?}", basis);
+    println!("\nOrthogonality: {}", orthogonality_measure(&basis));
+    println!("Average Vector Length: {}", average_vector_length(&basis));
     let delta = Float::with_val(53, 0.75);
     lll(&mut basis, delta.clone());
-    bkz(&mut basis1, delta.clone(), 2, 1000);
-    println!("Reduced basis (LLL): {:?}", basis);
-    println!("Reduced basis (BKZ): {:?}", basis1);
-    assert_eq!(basis1, basis);
+    bkz(&mut basis1, delta.clone(), 3, 1000);
+    println!("\n\nReduced basis (LLL): {:?}", basis);
+    println!("\nOrthogonality: {}", orthogonality_measure(&basis));
+    println!("Average Vector Length: {}", average_vector_length(&basis));
+    println!("\n\nReduced basis (BKZ): {:?}", basis1);
+    println!("\nOrthogonality: {}", orthogonality_measure(&basis1));
+    println!("Average Vector Length: {}", average_vector_length(&basis1));
     /*let target = vec![Float::with_val(53, 2.5), Float::with_val(53, 3.5), Float::with_val(53, 4.5)];
     let bnp_result = bnp(&basis, &target, basis.len(), &gs);
     let reconstructed = reconstruct(&basis, &bnp_result);
